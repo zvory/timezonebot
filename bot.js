@@ -4,7 +4,6 @@ const client = new Discord.Client();
 const date = require('date-and-time');
 const moment = require('moment-timezone');
 const tz = require('timezone-names');
-const token = process.argv[2];
 const timezones = tz.getAll();
 
 
@@ -22,75 +21,68 @@ date.setLocales('en', {
 });
 
 client.on('ready', () => {
-    console.log('I am ready!');
+    console.log('Bot is ready!');
 });
 
-const timeFormats = [  `h:mm A`, `h A`, `h:mmA`, `hA`,`H:mm`, `Hmm`, `H`];
-
-const tzconvertUsageMessage =`Sorry, I don't understand. 
-    Usage: "?tzconvert your_time_here"
-    Accepted timeformats are: ${timeFormats.join(", ")}
-    \`A\` means "am" or "pm"
-    Make sure you have set your timezone role with the bot!`;
-
-const tzsetUsageMessage = `Sorry, I don't understand. 
-            Usage: "?tz KST"`;
 
 client.on('message', message => {
     const messageString = message.toString();
 
-    // messsage of the form "?tz GST"
-    if (messageString.startsWith("?settz")) {
+    if (messageString.startsWith("?tzconvert")) {
+        const userTimeInput = messageString.substring(messageString.indexOf(" "));
 
-        const messageTZ= messageString.split(' ')[1];
-        const timezoneMentioned = timezones.filter(timezone =>
-            messageTZ === timezone.Abbreviation);
-
-        if (timezoneMentioned.length !== 1) {
-            message.reply(tzsetUsageMessage);
-            return;
-        } else {
-            const userTimezone = timezoneMentioned[0];
-            console.log(userTimezone);
-            message.reply(`You've registered for ${userTimezone.Abbreviation} ${userTimezone.Name}`);
-            return;
-        }
-    } else if (messageString.startsWith("?tzconvert")) {
-
-        const messageAsArray = messageString.split(" ");
-        if (messageAsArray.length <= 1){
-            message.reply(tzconvertUsageMessage);
-            return;
-        } 
-
-        const timeInput = messageAsArray.slice(1).join(" ");
         // now we try a whole bunch of different formats, and take the ones that are valid
-        const validFormats = timeFormats.filter(format => moment(timeInput, format).isValid());
+        const timeFormats = [  `h:mm A`, `h A`, `h:mmA`, `hA`,`H:mm`, `Hmm`, `H`];
+        const validFormats = timeFormats.filter(format => moment(userTimeInput, format).isValid());
+
         if (validFormats.length == 0) {
-            message.reply(tzconvertUsageMessage);
+            message.reply(`Sorry, I don't understand. 
+                    Usage: "?tzconvert your_time_here"
+                    Accepted timeformats are: ${timeFormats.join(", ")}
+                    \`A\` means "am" or "pm"
+                    E.g. \`?tzconvert 11:34 pm\``);
             return;
         } else {
             // TODO make this not hardcoded
             const userTZ = "America/New_York";
 
-            const format = validFormats[0];
+            const userTimeFormat = validFormats[0];
+            const outputFormat = 'h:mm a z';
 
-            console.log("timeInput: ", timeInput);
-            console.log("Format: ", format);
-            const userMoment = moment(timeInput, format, undefined, undefined, userTZ);
-            
-           // `${timeInput} ${userOffset}`, `${format} Z`);
+            const userMoment = moment(userTimeInput, userTimeFormat, undefined, undefined, userTZ);
+            const userTimeString = userMoment.format(outputFormat);
 
-            const converted = ['America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Asia/Seoul', 'Asia/Shanghai', 'Asia/Kolkata', 'Europe/Moscow', 'Europe/Kiev', 'Africa/Johannesburg', 'Europe/Berlin', 'Europe/London', 'America/Sao_Paulo'].map(tz => userMoment.clone().tz(tz).format('h:mm a z'));
+            const convertedTimesArray = ['America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Asia/Seoul', 'Asia/Shanghai', 'Asia/Kolkata', 'Europe/Moscow', 'Europe/Kiev', 'Africa/Johannesburg', 'Europe/Berlin', 'Europe/London', 'America/Sao_Paulo']
+            .map(tz => userMoment.clone().tz(tz).format(outputFormat));
+            const convertedTimesString = convertedTimesArray.join(", ");
 
             const replyString = 
-            `${userMoment.format('h:mm a z')} is 
-            ${converted.toString().replace(/,/g,  ", ")}`;
-                
+                `${userTimeString} is 
+                ${convertedTimesString}`;
+
             console.log(replyString);
             message.reply(replyString);
         }
     }
 });
 
-client.login(token);
+const {DISCORD_BOT_TOKEN: discordBotToken, GOOGLE_MAPS_API_KEY: googleMapsAPIKey} = process.env;
+client.login(discordBotToken);
+
+
+
+//var googleMapsClient = require('@google/maps').createClient({
+//    key: googleMapsApiKey
+//});
+//
+//// Geocode an address.
+//googleMapsClient.geocode({
+//    address: '1600 Amphitheatre Parkway, Mountain View, CA'
+//}, function(err, response) {
+//    if (err) {
+//        console.log(err);
+//        return;
+//    } else {
+//        const
+//    }
+//});
