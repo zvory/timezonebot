@@ -17,4 +17,4 @@ npm install
 node bot.js YOUR_DISCORD_BOT_KEY
 ```
 
-Uses discord.js
+npm install might give a bunch of warnings, that's caused by `discord.js` you can probably ignore those.
