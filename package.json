@@ -1,0 +1,32 @@
+{
+  "name": "timezonebot",
+  "version": "1.0.0",
+  "description": "discord bot that converts times to ease coordination",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "./b.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zvory/timezonebot.git"
+  },
+  "keywords": [
+    "timezone",
+    "discord",
+    "discordjs",
+    "coordination"
+  ],
+  "author": "Alex Zvorygin <livingalex@gmail.com> (https://www.github.com/zvory)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zvory/timezonebot/issues"
+  },
+  "homepage": "https://github.com/zvory/timezonebot#readme",
+  "dependencies": {
+    "date-and-time": "^0.5.0",
+    "discord.js": "^11.2.1",
+    "moment": "^2.18.1",
+    "moment-timezone": "^0.5.13"
+  }
+}
