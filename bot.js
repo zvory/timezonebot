@@ -28,7 +28,9 @@ client.on('ready', () => {
 const timeFormats = [  `h:mm A`, `h A`, `h:mmA`, `hA`,`H:mm`, `Hmm`, `H`];
 
 const tzconvertUsageMessage =`Sorry, I don't understand. 
-    Usage: "?tzconvert ${timeFormats}
+    Usage: "?tzconvert your_time_here"
+    Accepted timeformats are: ${timeFormats.join(", ")}
+    \`A\` means "am" or "pm"
     Make sure you have set your timezone role with the bot!`;
 
 const tzsetUsageMessage = `Sorry, I don't understand. 
