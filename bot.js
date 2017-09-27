@@ -5,7 +5,14 @@ const date = require('date-and-time');
 const moment = require('moment-timezone');
 const tz = require('timezone-names');
 const timezones = tz.getAll();
+// this is necessary only for debugging
+const util = require('util');
 
+// idk the tutorial said node wants this in here
+process.on('unhandledRejection', (err) => { 
+  console.error(err)
+  process.exit(1)
+})
 
 // hack from github 
 // https://github.com/knowledgecode/date-and-time/issues/4
@@ -28,8 +35,11 @@ client.on('ready', () => {
 client.on('message', message => {
     const messageString = message.toString();
 
-    if (messageString.startsWith("?tzconvert")) {
-        const userTimeInput = messageString.substring(messageString.indexOf(" "));
+    const tzconvert = "?tzconver";
+    if (messageString.startsWith(tzconvert)) {
+        const userTimeInput = messageString.substring(tzconvert.length, messageString.indexOf(","));
+        const userLocation = messageString.substring(messageString.indexOf(",") + 1);
+        console.log(userLocation);
 
         // now we try a whole bunch of different formats, and take the ones that are valid
         const timeFormats = [  `h:mm A`, `h A`, `h:mmA`, `hA`,`H:mm`, `Hmm`, `H`];
@@ -43,25 +53,32 @@ client.on('message', message => {
                     E.g. \`?tzconvert 11:34 pm\``);
             return;
         } else {
-            // TODO make this not hardcoded
-            const userTZ = "America/New_York";
 
-            const userTimeFormat = validFormats[0];
-            const outputFormat = 'h:mm a z';
+            locationToTimeZone(userLocation).then(
+                ({timeZoneId}) => {
 
-            const userMoment = moment(userTimeInput, userTimeFormat, undefined, undefined, userTZ);
-            const userTimeString = userMoment.format(outputFormat);
+                const userTimeFormat = validFormats[0];
+                const outputFormat = 'h:mm a z';
 
-            const convertedTimesArray = ['America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Asia/Seoul', 'Asia/Shanghai', 'Asia/Kolkata', 'Europe/Moscow', 'Europe/Kiev', 'Africa/Johannesburg', 'Europe/Berlin', 'Europe/London', 'America/Sao_Paulo']
-            .map(tz => userMoment.clone().tz(tz).format(outputFormat));
-            const convertedTimesString = convertedTimesArray.join(", ");
+                const userMoment = moment.tz(userTimeInput, userTimeFormat, timeZoneId);
+                const userTimeString = userMoment.format("h:mm a z");
 
-            const replyString = 
-                `${userTimeString} is 
-                ${convertedTimesString}`;
+                console.log("TiemzoneID: ", timeZoneId);
+                console.log("user time string: ", userTimeString);
 
-            console.log(replyString);
-            message.reply(replyString);
+                const convertedTimesArray = ['America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Asia/Seoul', 'Asia/Shanghai', 'Asia/Kolkata', 'Europe/Moscow', 'Europe/Kiev', 'Africa/Johannesburg', 'Europe/Berlin', 'Europe/London', 'America/Sao_Paulo']
+                    .map(tz => userMoment.clone().tz(tz).format(outputFormat));
+                const convertedTimesString = convertedTimesArray.join(", ");
+
+                const replyString = 
+                    `${userTimeString} in ${timeZoneId} is:
+                    ${convertedTimesString}`;
+
+                console.log(replyString);
+                message.reply(replyString);
+
+                }).catch(e => console.log(e));
+            
         }
     }
 });
@@ -69,20 +86,58 @@ client.on('message', message => {
 const {DISCORD_BOT_TOKEN: discordBotToken, GOOGLE_MAPS_API_KEY: googleMapsAPIKey} = process.env;
 client.login(discordBotToken);
 
+var googleMapsClient = require('@google/maps').createClient({
+   key: googleMapsAPIKey,
+   Promise: Promise
+});
+
+async function locationToTimeZone (address) {
+    let geocodeResponse;
+    try{
+        geocodeResponse = await googleMapsClient.geocode({address}).asPromise();
+    } catch (e) {
+        console.log("Geocoding error: ", e);
+        // wow TODO we'll need some error handling
+        return e;
+    }
+
+    const [ {geometry : {location}}] = geocodeResponse.json.results;
+
+    const milisecondsInOneSecond = 1e4;
+    const timestamp = Date.now() / milisecondsInOneSecond; 
+
+    const queryObject = {location, timestamp};
+    
+    let timezoneLookupResult
+    try{
+         timezoneLookupResult = await googleMapsClient.timezone(queryObject).asPromise();
+    } catch (e) {
+        console.log("Timezone API error: ", e);
+        return e;
+    }
+
+    return timezoneLookupResult.json;
+}
+
+//locationToTimeZone("Manilla").then(res => console.log(res));
+
+// // Geocode an address.
+// googleMapsClient.geocode({
+//    address: 'Manilla'
+// }).asPromise()
+//     .then(response => {
+//         const [ {geometry : {location}}] = response.json.results;
+//         const milisecondsInOneSecond = 1e4;
+//         const timestamp = Date.now() / milisecondsInOneSecond; 
+//         const queryObject = {location, timestamp};
+//         console.log(queryObject);
+//         googleMapsClient.timezone(queryObject).asPromise()
+//             .then(response=> console.log(response.json))
+//             .catch(err => console.log("Error: ", err));
+        
 
 
-//var googleMapsClient = require('@google/maps').createClient({
-//    key: googleMapsApiKey
-//});
-//
-//// Geocode an address.
-//googleMapsClient.geocode({
-//    address: '1600 Amphitheatre Parkway, Mountain View, CA'
-//}, function(err, response) {
-//    if (err) {
-//        console.log(err);
-//        return;
-//    } else {
-//        const
-//    }
-//});
+//     })
+//     .catch(err => console.log(err));
+
+

@@ -24,10 +24,12 @@
   },
   "homepage": "https://github.com/zvory/timezonebot#readme",
   "dependencies": {
+    "@google/maps": "^0.4.3",
     "date-and-time": "^0.5.0",
     "discord.js": "^11.2.1",
     "moment": "^2.18.1",
     "moment-timezone": "^0.5.13",
+    "nodemon": "^1.12.1",
     "timezone-names": "0.0.3"
   }
 }
