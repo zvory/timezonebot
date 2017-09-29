@@ -20,6 +20,7 @@ async function locationToTimeZone (address) {
     try{
         geocodeResponse = await googleMapsClient.geocode({address}).asPromise();
     } catch (e) {
+        console.error(e);
         throw e;
     }
 
@@ -40,6 +41,7 @@ async function locationToTimeZone (address) {
     try{
          timezoneLookupResult = await googleMapsClient.timezone(queryObject).asPromise();
     } catch (e) {
+        console.error(e);
         throw (e);
     }
 
