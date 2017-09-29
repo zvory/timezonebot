@@ -112,7 +112,7 @@ client.on('message', async message => {
             `${userTimeString} in ${timeZoneId} is:
             ${convertedTimesString}`;
 
-        console.log(replyString);
+        console.log("Converting from: ", userLocation);
         message.reply(replyString);
     }
 });
