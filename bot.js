@@ -25,7 +25,7 @@ async function locationToTimeZone (address) {
     }
 
     if (geocodeResponse.json.results.length === 0 || geocodeResponse.json.status === "ZERO_RESULTS") {
-        throw "google maps couldn't geocode adress";
+        throw `google maps couldn't geocode adress: ${address}`;
     }
 
     // pull out latitude and longitude object from response
