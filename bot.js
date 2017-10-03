@@ -3,6 +3,20 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 const moment = require('moment-timezone');
 
+const outputTimezones = [
+'UTC',
+'Europe/London',
+'America/New_York',
+'America/Chicago',
+'America/Denver',
+'America/Los_Angeles',
+'Asia/Tokyo',
+'Asia/Hong_Kong',
+'Asia/Kolkata',
+'Europe/Moscow',
+'Europe/Berlin',];
+
+
 // idk the tutorial said node wants this in here to make errors go away
 process.on('unhandledRejection', (err) => { 
   console.error(err)
@@ -61,6 +75,43 @@ function getTimeFormat (timeFormats, timeString) {
         return validFormats[0];
 }
 
+// takes in a string of the form "{time},{location}"
+// returns a moment object
+// accepts a bunch of formats, including any string that contains /now/i
+async function timeAndLocationToMoment (timeString, locationString) {
+    if (timeString.toLowerCase().includes("now")) {
+        // whatever, i should remove the location->timezone id into a function
+        // but i want to get this done
+        let timeZoneId;
+        try {
+            // weird syntax is to allow object destructuring
+            ({timeZoneId} = await locationToTimeZone(locationString));
+        } catch (e) {
+            throw `Sorry, I didn't understand your location: ${locationString}, Try things like "california", "Paris", or "San Jose, Costa Rica"`;
+        }
+        return moment.tz(Date.now(), timeZoneId);
+    } else {
+        const timeFormats = [  `h:mm A`, `h:mmA`, `h A`, `hA`,`H:mm`, `Hmm`, `H`];
+
+        let timeStringFormat;
+        try{
+            timeStringFormat = getTimeFormat(timeFormats, timeString);
+        } catch (e) {
+            const examples = timeFormats.map(format => moment().format(format)).join(", ");
+            throw `Sorry, I don't understand your time format. Usage: "?tz your_time_here, your_location here". Accepted timeformats are: ${examples}, and "now"`;
+        }
+
+        let timeZoneId;
+        try {
+            // weird syntax is to allow object destructuring
+            ({timeZoneId} = await locationToTimeZone(locationString));
+        } catch (e) {
+            throw `Sorry, I didn't understand your location: ${locationString}, Try things like "california", "Paris", or "San Jose, Costa Rica"`;
+        }
+        return moment.tz(timeString, timeStringFormat, timeZoneId);
+    }
+}
+
 client.on('message', async message => {
     const messageString = message.toString();
 
@@ -69,41 +120,21 @@ client.on('message', async message => {
 
         // after command string, but before first comma
         const inputTime = messageString.substring(commandString.length, messageString.indexOf(","));
+
         // user's location is after first comma
-        const userLocation = messageString.substring(messageString.indexOf(",") + 1);
+        const inputLocation = messageString.substring(messageString.indexOf(",") + 1);
 
-        const timeFormats = [  `h:mm A`, `h:mmA`, `h A`, `hA`,`H:mm`, `Hmm`, `H`];
-
-        let inputTimeFormat;
-        try{
-            inputTimeFormat = getTimeFormat(timeFormats, inputTime);
-        } catch (e) {
-            console.error(e);
-            const examples = timeFormats.map(format => moment().format(format)).join(", ");
-            message.reply(`Sorry, I don't understand your time format.
-                    Usage: "?tz your_time_here, your_location here"
-                    Accepted timeformats are: ${examples}`);
-            return;
-        }
-
-        let timeZoneId;
+        let userMoment;
         try {
-            // weird syntax is to allow object destructuring
-            ({timeZoneId} = await locationToTimeZone(userLocation));
+            userMoment = await timeAndLocationToMoment(inputTime,  inputLocation);
         } catch (e) {
-            message.reply(`Sorry, I didn't understand your location: ${userLocation},
-                    Try things like "california", "Paris", or "San Jose, Costa Rica"`);
             console.error(e);
+            message.reply(e);
             return;
         }
-
         const outputFormat = 'h:mm a z';
-
-        //turn the user's inputted time into actual data
-        const userMoment = moment.tz(inputTime, inputTimeFormat, timeZoneId);
         const userTimeString = userMoment.format("h:mm a z");
 
-        const outputTimezones = ['America/New_York', 'America/Chicago', 'America/Los_Angeles', 'Asia/Seoul', 'Asia/Shanghai', 'Asia/Kolkata', 'Europe/Moscow', 'Europe/Kiev', 'Africa/Johannesburg', 'Europe/Berlin', 'Europe/London', 'America/Sao_Paulo'];
 
         const convertedTimesArray = outputTimezones.map(tz => 
                 userMoment.clone().tz(tz).format(outputFormat));
@@ -111,10 +142,9 @@ client.on('message', async message => {
         const convertedTimesString = convertedTimesArray.join(", ");
 
         const replyString = 
-            `${userTimeString} in ${timeZoneId} is:
-            ${convertedTimesString}`;
+            `${userTimeString} in ${userMoment.tz()} is:    ${convertedTimesString}`;
 
-        console.log("Converting from: ", userLocation);
+        console.log(`Converted ${messageString}`);
         message.reply(replyString);
     }
 });
