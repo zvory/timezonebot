@@ -149,6 +149,11 @@ client.on('message', async message => {
     }
 });
 
+client.on("ready", () => {
+    console.log("Discord client ready");
+    client.user.setGame(`?tz 8:32pm, london`);
+});
+
 // pull API keys from environment variables
 const {DISCORD_BOT_TOKEN: discordBotToken, GOOGLE_MAPS_API_KEY: googleMapsAPIKey} = process.env;
 
