@@ -1,13 +1,8 @@
 ## timezonebot
 This is a discord bot that eases global co-ordination: give it a time and place, and it will translate that time to a variety of timezones.
 
-usage:
-```?tz 11:34pm, paris```
-outputs:
-```
-11:34 am CEST in Europe/Paris is:
-            5:34 am EDT, 4:34 am CDT, 2:34 am PDT, 6:34 pm KST, 5:34 pm CST, 3:04 pm IST, 12:34 pm MSK, 12:34 pm EEST, 11:34 am SAST, 11:34 am CEST, 10:34 am BST, 6:34 am -03
-```
+![sample usage](/sample.PNG?raw=true)
+
 
 ### Running the bot
 You'll need:
